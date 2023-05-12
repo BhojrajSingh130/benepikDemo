@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { DynamicService } from '../dynamic.service';
 
 @Component({
@@ -9,36 +9,39 @@ import { DynamicService } from '../dynamic.service';
 })
 export class DynamicFormComponent implements OnInit {
 
-  myForm!: FormGroup
+  myForm!:FormGroup
   formData: any[] = []
-  constructor(private service: DynamicService, private _fb: FormBuilder) { }
+  constructor(private service: DynamicService, private _fb: FormBuilder) { 
+    
 
-  ngOnInit(): void {
-    this.service.getDataFromApi()
-    .subscribe((res: any) => {
-        this.formData = res.keys
-        console.log(this.formData);
-      })
-
-      this.initializeForm();
-    }
-
-  initializeForm() {
-    this.myForm = this._fb.group({
-      client_id: ['', [Validators.required]],
-      device: ['', [Validators.required]],
-      device_id: ['', [Validators.required]],
-      app_version: ['', [Validators.required]],
-      user_id: ['', [Validators.required]],
-      brand_id: ['', [Validators.required]],
-    })
   }
 
+  ngOnInit(): void {
+    
+    this.service.postDataFromApi()
+    .subscribe((res: any) => {
+      this.formData = res?.data
+      console.log(res)
+    })
+    this.myForm =  this.toFormGroup()
+  }
+  
+  // get isValid() { return this.myForm.controls['table_column'].valid; }
+  toFormGroup() {
+    const group: any = {};
+
+    this.formData.forEach(item => {
+      group[item.table_column] = item.is_mandatory ? new FormControl(item.value || '', Validators.required)
+                                              : new FormControl(item.value || '');
+    });
+    return new FormGroup(group);
+  }
+
+
+
   data: any
-  submitted:boolean=false
+  submitted: boolean = false
   submitForm() {
-    this.data = this.myForm.value
-    console.log(this.myForm.value)
     this.submitted = true
   }
 }
